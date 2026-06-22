@@ -29,6 +29,9 @@ require_once __DIR__ . '/includes/header.php';
         <div class="actions">
             <a class="btn btn-primary" href="register_club.php"><i class="fa-solid fa-building-columns"></i> Register Club</a>
             <a class="btn btn-primary" href="register_member.php"><i class="fa-solid fa-user-plus"></i> Register Member</a>
+            <a class="btn btn-secondary" href="events.php"><i class="fa-solid fa-calendar-days"></i> Manage Events</a>
+            <a class="btn btn-secondary" href="sports_houses.php"><i class="fa-solid fa-shield-halved"></i> Sports Houses</a>
+            <a class="btn btn-light" href="student_login.php"><i class="fa-solid fa-right-to-bracket"></i> Student Login</a>
             <a class="btn btn-secondary" href="attendance.php"><i class="fa-solid fa-clipboard-check"></i> Take Attendance</a>
             <a class="btn btn-light" href="attendance_report.php"><i class="fa-solid fa-chart-column"></i> View Reports</a>
         </div>

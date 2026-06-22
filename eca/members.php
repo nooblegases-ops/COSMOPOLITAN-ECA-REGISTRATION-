@@ -11,9 +11,11 @@ if (isset($_GET['delete'])) {
 $filters = [
     'club_id' => $_GET['club_id'] ?? '',
     'role' => $_GET['role'] ?? '',
+    'course' => trim($_GET['course'] ?? ''),
     'level' => trim($_GET['level'] ?? ''),
     'intake' => trim($_GET['intake'] ?? ''),
     'group' => trim($_GET['group'] ?? ''),
+    'sports_house' => $_GET['sports_house'] ?? '',
     'status' => $_GET['status'] ?? '',
 ];
 
@@ -53,6 +55,17 @@ function role_badge_class(string $role): string
     return 'badge-' . strtolower(str_replace(' ', '-', $role));
 }
 
+function whatsapp_link(string $phoneNumber): string
+{
+    $digits = preg_replace('/\D+/', '', $phoneNumber);
+
+    if (str_starts_with($digits, '0')) {
+        $digits = '673' . substr($digits, 1);
+    }
+
+    return 'https://wa.me/' . $digits;
+}
+
 $pageTitle = 'Member List';
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -79,9 +92,19 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div><label for="course">Course</label><input id="course" name="course" value="<?= e($filters['course']) ?>"></div>
                 <div><label for="level">Level</label><input id="level" name="level" value="<?= e($filters['level']) ?>"></div>
                 <div><label for="intake">Intake</label><input id="intake" name="intake" value="<?= e($filters['intake']) ?>"></div>
                 <div><label for="group">Group</label><input id="group" name="group" value="<?= e($filters['group']) ?>"></div>
+                <div>
+                    <label for="sports_house">Sports House</label>
+                    <select id="sports_house" name="sports_house">
+                        <option value="">All houses</option>
+                        <?php foreach (['Amethyst', 'Amber', 'Sapphire', 'Jade'] as $house): ?>
+                            <option value="<?= e($house) ?>" <?= $filters['sports_house'] === $house ? 'selected' : '' ?>><?= e($house) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div>
                     <label for="status">Status</label>
                     <select id="status" name="status">
@@ -105,12 +128,15 @@ require_once __DIR__ . '/includes/header.php';
             <table class="datatable plain-table">
                 <thead>
                 <tr>
+                    <th>Picture</th>
                     <th>Name</th>
+                    <th>Course</th>
                     <th>Phone</th>
                     <th>Role</th>
                     <th>Level</th>
                     <th>Intake</th>
                     <th>Group</th>
+                    <th>Sports House</th>
                     <th>Club</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -119,16 +145,28 @@ require_once __DIR__ . '/includes/header.php';
                 <tbody>
                 <?php foreach ($members as $row): ?>
                     <tr>
+                        <td>
+                            <span class="member-photo">
+                                <?php if (!empty($row['photo_path'])): ?>
+                                    <img src="<?= e($row['photo_path']) ?>" alt="<?= e($row['full_name']) ?>">
+                                <?php else: ?>
+                                    <i class="fa-solid fa-user"></i>
+                                <?php endif; ?>
+                            </span>
+                        </td>
                         <td><?= e($row['full_name']) ?></td>
-                        <td><?= e($row['phone_number']) ?></td>
+                        <td><?= e($row['course'] ?? '-') ?></td>
+                        <td><a class="phone-link" href="<?= e(whatsapp_link($row['phone_number'])) ?>" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> <?= e($row['phone_number']) ?></a></td>
                         <td><span class="badge <?= e(role_badge_class($row['role'])) ?>"><?= e($row['role']) ?></span></td>
                         <td><?= e($row['level']) ?></td>
                         <td><?= e($row['intake']) ?></td>
                         <td><?= e($row['group']) ?></td>
+                        <td><?= e($row['sports_house'] ?? '-') ?></td>
                         <td><?= e($row['club_name']) ?></td>
                         <td><?= e($row['status']) ?></td>
                         <td>
                             <div class="actions">
+                                <a class="btn btn-light" href="register_member.php?edit=<?= (int) $row['id'] ?>#photo"><i class="fa-solid fa-upload"></i> Upload Picture</a>
                                 <a class="btn btn-light" href="register_member.php?edit=<?= (int) $row['id'] ?>"><i class="fa-solid fa-pen"></i> Edit</a>
                                 <a class="btn btn-light confirm-delete" href="members.php?delete=<?= (int) $row['id'] ?>"><i class="fa-solid fa-trash"></i> Delete</a>
                             </div>

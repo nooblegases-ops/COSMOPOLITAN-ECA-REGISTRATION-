@@ -37,7 +37,7 @@ require_once __DIR__ . '/includes/header.php';
                         <p><strong><?= e($person['full_name']) ?></strong><br><?= e($person['phone_number']) ?></p>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p class="text-slate-500">No <?= e(strtolower($role)) ?> assigned.</p>
+                    <p class="empty-text">No <?= e(strtolower($role)) ?> assigned.</p>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
@@ -50,6 +50,7 @@ require_once __DIR__ . '/includes/header.php';
                 <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Course</th>
                     <th>Phone</th>
                     <th>Role</th>
                     <th>Level</th>
@@ -62,6 +63,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php foreach ($members as $row): ?>
                     <tr>
                         <td><?= e($row['full_name']) ?></td>
+                        <td><?= e($row['course'] ?? '-') ?></td>
                         <td><?= e($row['phone_number']) ?></td>
                         <td><?= e($row['role']) ?></td>
                         <td><?= e($row['level']) ?></td>

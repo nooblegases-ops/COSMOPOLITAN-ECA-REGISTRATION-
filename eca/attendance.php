@@ -4,6 +4,68 @@ require_once __DIR__ . '/includes/db.php';
 $selectedClubId = (int) ($_GET['club_id'] ?? $_POST['club_id'] ?? 0);
 $selectedDate = $_GET['date'] ?? $_POST['date'] ?? date('Y-m-d');
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['seed_sample'])) {
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare('INSERT IGNORE INTO clubs (club_name) VALUES (:club_name)');
+        $stmt->execute(['club_name' => 'Sample ECA Club']);
+
+        $stmt = $pdo->prepare('SELECT id FROM clubs WHERE club_name = :club_name');
+        $stmt->execute(['club_name' => 'Sample ECA Club']);
+        $sampleClubId = (int) $stmt->fetchColumn();
+
+        $sampleMembers = [
+            ['Ariana Salleh', '6738123456', 'President', 'Level 5', 'Intake 16', 'Group 1', 'Amethyst', 'Present'],
+            ['Daniel Lim', '6738234567', 'Assistant President', 'Level 2', 'Intake 17', 'Group 2', 'Sapphire', 'Late'],
+            ['Mira Wong', '6738345678', 'Facilitator', 'Level 3', 'Intake 18', 'Group 1', 'Jade', 'Present'],
+            ['Hakim Rosli', '6738456789', 'Member', 'Level 1', 'Intake 20', 'Group 2', 'Amber', 'Absent'],
+        ];
+
+        $findMember = $pdo->prepare('SELECT id FROM members WHERE phone_number = :phone_number LIMIT 1');
+        $insertMember = $pdo->prepare('
+            INSERT INTO members (club_id, full_name, phone_number, sports_house, role, level, intake, `group`, status)
+            VALUES (:club_id, :full_name, :phone_number, :sports_house, :role, :level, :intake, :member_group, "Active")
+        ');
+        $upsertAttendance = $pdo->prepare('
+            INSERT INTO attendance (club_id, member_id, date, status)
+            VALUES (:club_id, :member_id, :date, :status)
+            ON DUPLICATE KEY UPDATE club_id = VALUES(club_id), status = VALUES(status)
+        ');
+
+        foreach ($sampleMembers as [$name, $phone, $role, $level, $intake, $group, $house, $status]) {
+            $findMember->execute(['phone_number' => $phone]);
+            $memberId = (int) $findMember->fetchColumn();
+
+            if ($memberId === 0) {
+                $insertMember->execute([
+                    'club_id' => $sampleClubId,
+                    'full_name' => $name,
+                    'phone_number' => $phone,
+                    'sports_house' => $house,
+                    'role' => $role,
+                    'level' => $level,
+                    'intake' => $intake,
+                    'member_group' => $group,
+                ]);
+                $memberId = (int) $pdo->lastInsertId();
+            }
+
+            $upsertAttendance->execute([
+                'club_id' => $sampleClubId,
+                'member_id' => $memberId,
+                'date' => $selectedDate,
+                'status' => $status,
+            ]);
+        }
+
+        $pdo->commit();
+        redirect_with_alert("attendance.php?club_id={$sampleClubId}&date={$selectedDate}", 'success', 'Sample attendance data added.');
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        redirect_with_alert('attendance.php', 'error', 'Could not create sample attendance data.');
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $pdo->beginTransaction();
     try {
@@ -75,6 +137,10 @@ require_once __DIR__ . '/includes/header.php';
             <div class="mt-4">
                 <button class="btn btn-secondary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Load Members</button>
             </div>
+        </form>
+        <form method="post" class="mt-4">
+            <input type="hidden" name="date" value="<?= e($selectedDate) ?>">
+            <button class="btn btn-light" type="submit" name="seed_sample" value="1"><i class="fa-solid fa-wand-magic-sparkles"></i> Add Sample Data</button>
         </form>
     </div>
 
